@@ -11,10 +11,11 @@ export class ProductService {
 
   constructor(private http: HttpClient) { }
 
-  getProducts(page: number = 0, size: number = 10, name?: string, category?: string): Observable<ProductResponse> {
+  getProducts(page: number = 0, size: number = 10, name?: string, category?: string, sort: string = 'name,asc'): Observable<ProductResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('sort', sort);
 
     if (name) {
       params = params.set('name', name);
