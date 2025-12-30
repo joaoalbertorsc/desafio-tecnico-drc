@@ -11,71 +11,89 @@ import { finalize } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="container">
-      <h2>Lista de Produtos</h2>
+    <div class="main-card">
+      <!-- Header Row: Title, Stock, Add Button -->
+      <div class="card-header">
+        <div class="title-section">
+          <h2>Lista de Produtos</h2>
+          <div *ngIf="totalStockValue !== null" class="stock-badge">
+            <span class="stock-label">Total em Estoque:</span>
+            <span class="stock-value">{{ totalStockValue | currency:'BRL' }}</span>
+          </div>
+        </div>
+        <button routerLink="/products/new" class="btn-primary">
+          <span class="plus-icon">+</span> Novo Produto
+        </button>
+      </div>
 
-      <div class="actions">
-        <button routerLink="/products/new" class="btn-primary">Novo Produto</button>
-        <div class="filters">
-          <input type="text" [(ngModel)]="filterName" placeholder="Buscar por nome" (input)="loadProducts()">
-          <input type="text" [(ngModel)]="filterCategory" placeholder="Filtrar por categoria" (input)="loadProducts()">
+      <!-- Filter Row -->
+      <div class="filter-row">
+        <div class="search-input-group">
+          <span class="search-icon">🔍</span>
+          <input type="text" [(ngModel)]="filterName" placeholder="Buscar por nome..." (input)="onFilterChange()">
+        </div>
+        <div class="search-input-group">
+          <span class="search-icon">📂</span>
+          <input type="text" [(ngModel)]="filterCategory" placeholder="Filtrar por categoria..." (input)="onFilterChange()">
         </div>
       </div>
 
-      <div *ngIf="totalStockValue !== null" class="stock-info">
-        <strong>Valor Total em Estoque: </strong> {{ totalStockValue | currency:'BRL' }}
+      <div *ngIf="isLoading" class="loading">
+        <div class="spinner"></div> Carregando produtos...
       </div>
-
-      <div *ngIf="isLoading" class="loading">Carregando produtos...</div>
 
       <div *ngIf="errorMessage" class="error-message">
         <h3>Erro:</h3>
         <p>{{ errorMessage }}</p>
       </div>
 
-      <table *ngIf="!isLoading && !errorMessage">
-        <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Categoria</th>
-          <th>Preço</th>
-          <th>Estoque</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let product of products">
-          <td>{{ product.name }}</td>
-          <td>{{ product.category }}</td>
-          <td>
-            {{ product.price | currency:'BRL' }}
-            <span *ngIf="product.onSale" class="badge-sale">Promoção</span>
-          </td>
-          <td [class.low-stock]="product.lowStock">
-            {{ product.stockQuantity }}
-            <span *ngIf="product.lowStock" class="warning-icon" title="Estoque Baixo">⚠️</span>
-          </td>
-          <td>
-              <span [class.active]="product.active" [class.inactive]="!product.active">
-                {{ product.active ? 'Ativo' : 'Inativo' }}
-              </span>
-          </td>
-          <td>
-            <button [routerLink]="['/products', product.id, 'edit']" class="btn-edit">Editar</button>
-            <button (click)="openDeleteModal(product.id!)" class="btn-delete">Excluir</button>
-          </td>
-        </tr>
-        <tr *ngIf="products.length === 0">
-          <td colspan="6" style="text-align: center;">Nenhum produto encontrado.</td>
-        </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive" *ngIf="!isLoading && !errorMessage">
+        <table>
+          <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Categoria</th>
+            <th>Preço</th>
+            <th>Estoque</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let product of products">
+            <td>{{ product.name }}</td>
+            <td>{{ product.category }}</td>
+            <td>
+              {{ product.price | currency:'BRL' }}
+              <span *ngIf="product.onSale" class="badge-sale">Promoção</span>
+            </td>
+            <td [class.low-stock]="product.lowStock">
+              {{ product.stockQuantity }}
+              <span *ngIf="product.lowStock" class="warning-icon" title="Estoque Baixo">⚠️</span>
+            </td>
+            <td>
+                <span [class.active]="product.active" [class.inactive]="!product.active">
+                  {{ product.active ? 'Ativo' : 'Inativo' }}
+                </span>
+            </td>
+            <td>
+              <button [routerLink]="['/products', product.id, 'edit']" class="btn-icon edit" title="Editar">✏️</button>
+              <button (click)="openDeleteModal(product.id!)" class="btn-icon delete" title="Excluir">🗑️</button>
+            </td>
+          </tr>
+          <tr *ngIf="products.length === 0">
+            <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
+              Nenhum produto encontrado.
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="pagination" *ngIf="!isLoading && !errorMessage">
-        <button (click)="changePage(-1)" [disabled]="currentPage === 0">Anterior</button>
-        <span>Página {{ currentPage + 1 }} de {{ totalPages }}</span>
-        <button (click)="changePage(1)" [disabled]="currentPage >= totalPages - 1">Próxima</button>
+        <button (click)="changePage(-1)" [disabled]="currentPage === 0" class="btn-page">Anterior</button>
+        <span class="page-info">Página {{ currentPage + 1 }} de {{ totalPages }}</span>
+        <button (click)="changePage(1)" [disabled]="currentPage >= totalPages - 1" class="btn-page">Próxima</button>
       </div>
 
       <!-- Custom Confirmation Modal -->
@@ -92,40 +110,187 @@ import { finalize } from 'rxjs/operators';
     </div>
   `,
   styles: [`
-    .container { padding: 20px; }
-    .actions { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    .filters { display: flex; gap: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .active { color: green; font-weight: bold; }
-    .inactive { color: red; font-weight: bold; }
-    .pagination { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
-    .stock-info { margin-bottom: 10px; font-size: 1.1em; }
-    .btn-primary { background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
-    .btn-edit { margin-right: 5px; cursor: pointer; }
-    .btn-delete { color: red; cursor: pointer; }
-    .badge-sale { background-color: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; }
-    .low-stock { color: #d9534f; font-weight: bold; }
-    .warning-icon { margin-left: 5px; cursor: help; }
-    .loading { text-align: center; font-size: 1.2em; color: #666; margin: 20px 0; }
-    .error-message { color: red; background: #fee; padding: 10px; border: 1px solid red; margin: 20px 0; }
+    /* Card Container */
+    .main-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.04);
+      padding: 25px;
+      margin-top: 10px;
+    }
 
-    /* Modal Styles */
+    /* Header Section */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    h2 { margin: 0; color: #2c3e50; font-size: 1.5rem; }
+
+    /* Stock Badge */
+    .stock-badge {
+      background-color: #e3f2fd;
+      color: #1565c0;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .stock-label { font-weight: 500; }
+    .stock-value { font-weight: 700; }
+
+    /* Add Button */
+    .btn-primary {
+      background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+      color: white;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(40, 167, 69, 0.2);
+    }
+    .plus-icon { font-size: 1.1em; line-height: 1; }
+
+    /* Filter Row */
+    .filter-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .search-input-group {
+      position: relative;
+      flex: 1;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 0.85em;
+    }
+    .search-input-group input {
+      width: 100%;
+      padding: 10px 10px 10px 35px; /* Space for icon */
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .search-input-group input:focus {
+      border-color: #2a5298;
+      outline: none;
+    }
+
+    /* Table */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th {
+      text-align: left;
+      padding: 12px 15px;
+      color: #6c757d;
+      font-weight: 600;
+      border-bottom: 2px solid #f1f1f1;
+      background-color: #fff;
+    }
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #f1f1f1;
+      color: #333;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background-color: #f8f9fa; }
+
+    /* Status & Badges */
+    .active { color: #28a745; font-weight: 600; background: #e8f5e9; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; }
+    .inactive { color: #dc3545; font-weight: 600; background: #fbe9eb; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; }
+    .badge-sale { background-color: #fff3cd; color: #856404; padding: 3px 6px; border-radius: 4px; font-size: 0.7em; font-weight: 700; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .low-stock { color: #d9534f; font-weight: 700; }
+
+    /* Action Buttons */
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .btn-icon.edit:hover { background-color: #e3f2fd; }
+    .btn-icon.delete:hover { background-color: #fbe9eb; }
+
+    /* Pagination */
+    .pagination {
+      margin-top: 25px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-page {
+      background-color: white;
+      border: 1px solid #dee2e6;
+      color: #2a5298;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .btn-page:hover:not(:disabled) {
+      background-color: #e3f2fd;
+      border-color: #2a5298;
+    }
+    .btn-page:disabled {
+      color: #ccc;
+      cursor: not-allowed;
+      background-color: #f8f9fa;
+    }
+    .page-info { color: #6c757d; font-weight: 500; font-size: 0.9rem; }
+
+    /* Loading & Error */
+    .loading { text-align: center; padding: 40px; color: #666; font-size: 1em; }
+    .error-message { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+
+    /* Modal */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       display: flex; justify-content: center; align-items: center;
       z-index: 1000;
+      backdrop-filter: blur(2px);
     }
     .modal-content {
-      background-color: white; padding: 20px; border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      max-width: 400px; width: 100%; text-align: center;
+      background-color: white; padding: 25px; border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      max-width: 380px; width: 90%; text-align: center;
     }
-    .modal-actions { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-    .btn-secondary { background-color: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
-    .btn-danger { background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+    .modal-actions { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+    .btn-secondary { background-color: #6c757d; color: white; padding: 8px 18px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    .btn-danger { background-color: #dc3545; color: white; padding: 8px 18px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
   `]
 })
 export class ProductListComponent implements OnInit {
@@ -153,6 +318,11 @@ export class ProductListComponent implements OnInit {
   ngOnInit(): void {
     this.loadProducts();
     this.loadTotalStockValue();
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 0;
+    this.loadProducts();
   }
 
   loadProducts(): void {
