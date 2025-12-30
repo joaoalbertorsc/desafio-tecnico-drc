@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,13 +27,17 @@ public class Product {
     private Long id;
 
     @NotBlank(message = "Name is mandatory")
+    @Pattern(regexp = ".*[a-zA-Z\\u00C0-\\u00FF].*", message = "Name must contain at least one letter")
     @Schema(description = "Name of the product", example = "Smartphone X")
     private String name;
 
     @NotBlank(message = "Category is mandatory")
+    @Pattern(regexp = ".*[a-zA-Z\\u00C0-\\u00FF].*", message = "Category must contain at least one letter")
     @Schema(description = "Category of the product", example = "Electronics")
     private String category;
 
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
+    @Pattern(regexp = "^$|.*[a-zA-Z\\u00C0-\\u00FF].*", message = "Description must contain at least one letter if provided")
     @Schema(description = "Description of the product", example = "Latest model with high-res camera")
     private String description;
 
@@ -45,6 +51,7 @@ public class Product {
     @Schema(description = "Quantity in stock", example = "50")
     private Integer stockQuantity;
 
+    @Pattern(regexp = "^\\d*$", message = "Barcode must contain only numbers")
     @Schema(description = "Barcode of the product", example = "1234567890123")
     private String barcode;
 
