@@ -30,11 +30,11 @@ import { finalize } from 'rxjs/operators';
       <div class="filter-row">
         <div class="search-input-group">
           <span class="search-icon">🔍</span>
-          <input type="text" [(ngModel)]="filterName" placeholder="Buscar por nome..." (input)="onFilterChange()">
+          <input type="text" [(ngModel)]="filterName" placeholder="Buscar por nome..." (ngModelChange)="onFilterChange()">
         </div>
         <div class="search-input-group">
           <span class="search-icon">📂</span>
-          <input type="text" [(ngModel)]="filterCategory" placeholder="Filtrar por categoria..." (input)="onFilterChange()">
+          <input type="text" [(ngModel)]="filterCategory" placeholder="Filtrar por categoria..." (ngModelChange)="onFilterChange()">
         </div>
       </div>
 
@@ -51,11 +51,21 @@ import { finalize } from 'rxjs/operators';
         <table>
           <thead>
           <tr>
-            <th>Nome</th>
-            <th>Categoria</th>
-            <th>Preço</th>
-            <th>Estoque</th>
-            <th>Status</th>
+            <th (click)="onSort('name')" class="sortable">
+              Nome <span class="sort-icon">{{ getSortIcon('name') }}</span>
+            </th>
+            <th (click)="onSort('category')" class="sortable">
+              Categoria <span class="sort-icon">{{ getSortIcon('category') }}</span>
+            </th>
+            <th (click)="onSort('price')" class="sortable">
+              Preço <span class="sort-icon">{{ getSortIcon('price') }}</span>
+            </th>
+            <th (click)="onSort('stockQuantity')" class="sortable">
+              Estoque <span class="sort-icon">{{ getSortIcon('stockQuantity') }}</span>
+            </th>
+            <th (click)="onSort('active')" class="sortable">
+              Status <span class="sort-icon">{{ getSortIcon('active') }}</span>
+            </th>
             <th>Ações</th>
           </tr>
           </thead>
@@ -213,6 +223,20 @@ import { finalize } from 'rxjs/operators';
       font-weight: 600;
       border-bottom: 2px solid #f1f1f1;
       background-color: #fff;
+      user-select: none; /* Prevent text selection on double click */
+    }
+    th.sortable {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    th.sortable:hover {
+      background-color: #f8f9fa;
+      color: #2a5298;
+    }
+    .sort-icon {
+      font-size: 0.8em;
+      margin-left: 5px;
+      color: #aaa;
     }
     td {
       padding: 12px 15px;
@@ -306,6 +330,10 @@ export class ProductListComponent implements OnInit {
   filterCategory = '';
   totalStockValue: number | null = null;
 
+  // Sorting State
+  sortColumn = 'name';
+  sortDirection = 'asc';
+
   // Modal State
   showDeleteModal = false;
   productToDeleteId: number | null = null;
@@ -325,11 +353,32 @@ export class ProductListComponent implements OnInit {
     this.loadProducts();
   }
 
+  onSort(column: string): void {
+    if (this.sortColumn === column) {
+      // Toggle direction
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      // New column, default to asc
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.loadProducts();
+  }
+
+  getSortIcon(column: string): string {
+    if (this.sortColumn !== column) {
+      return '↕'; // Neutral sort icon
+    }
+    return this.sortDirection === 'asc' ? '↑' : '↓';
+  }
+
   loadProducts(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.productService.getProducts(this.currentPage, this.pageSize, this.filterName, this.filterCategory)
+    const sortParam = `${this.sortColumn},${this.sortDirection}`;
+
+    this.productService.getProducts(this.currentPage, this.pageSize, this.filterName, this.filterCategory, sortParam)
       .pipe(
         finalize(() => {
           this.isLoading = false;
