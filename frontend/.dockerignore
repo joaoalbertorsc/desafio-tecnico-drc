@@ -4,5 +4,4 @@ dist
 .idea
 .vscode
 Dockerfile
-nginx.conf
 README.md
