@@ -1,0 +1,104 @@
+<div class="main-card">
+  <div class="card-header">
+    <div class="title-section">
+      <h2>Lista de Produtos</h2>
+      <div *ngIf="totalStockValue !== null" class="stock-badge">
+        <span class="stock-label">Total em Estoque:</span>
+        <span class="stock-value">{{ totalStockValue | currency:'BRL' }}</span>
+      </div>
+    </div>
+    <button routerLink="/products/new" class="btn-primary">
+      <span class="plus-icon">+</span> Novo Produto
+    </button>
+  </div>
+
+  <div class="filter-row">
+    <div class="search-input-group">
+      <span class="search-icon">🔍</span>
+      <input type="text" [(ngModel)]="filterName" placeholder="Buscar por nome..." (ngModelChange)="onFilterChange()">
+    </div>
+    <div class="search-input-group">
+      <span class="search-icon">📂</span>
+      <input type="text" [(ngModel)]="filterCategory" placeholder="Filtrar por categoria..." (ngModelChange)="onFilterChange()">
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div> Carregando produtos...
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    <h3>Erro:</h3>
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div class="table-responsive" *ngIf="!isLoading && !errorMessage">
+    <table>
+      <thead>
+      <tr>
+        <th (click)="onSort('name')" class="sortable">
+          Nome <span class="sort-icon">{{ getSortIcon('name') }}</span>
+        </th>
+        <th (click)="onSort('category')" class="sortable">
+          Categoria <span class="sort-icon">{{ getSortIcon('category') }}</span>
+        </th>
+        <th (click)="onSort('price')" class="sortable">
+          Preço <span class="sort-icon">{{ getSortIcon('price') }}</span>
+        </th>
+        <th (click)="onSort('stockQuantity')" class="sortable">
+          Estoque <span class="sort-icon">{{ getSortIcon('stockQuantity') }}</span>
+        </th>
+        <th (click)="onSort('active')" class="sortable">
+          Status <span class="sort-icon">{{ getSortIcon('active') }}</span>
+        </th>
+        <th>Ações</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let product of products">
+        <td>{{ product.name }}</td>
+        <td>{{ product.category }}</td>
+        <td>
+          {{ product.price | currency:'BRL' }}
+          <span *ngIf="product.onSale" class="badge-sale">Promoção</span>
+        </td>
+        <td [class.low-stock]="product.lowStock">
+          {{ product.stockQuantity }}
+          <span *ngIf="product.lowStock" class="warning-icon" title="Estoque Baixo">⚠️</span>
+        </td>
+        <td>
+            <span [class.active]="product.active" [class.inactive]="!product.active">
+              {{ product.active ? 'Ativo' : 'Inativo' }}
+            </span>
+        </td>
+        <td>
+          <button [routerLink]="['/products', product.id, 'edit']" class="btn-icon edit" title="Editar">✏️</button>
+          <button (click)="openDeleteModal(product.id!)" class="btn-icon delete" title="Excluir">🗑️</button>
+        </td>
+      </tr>
+      <tr *ngIf="products.length === 0">
+        <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
+          Nenhum produto encontrado.
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="!isLoading && !errorMessage">
+    <button (click)="changePage(-1)" [disabled]="currentPage === 0" class="btn-page">Anterior</button>
+    <span class="page-info">Página {{ currentPage + 1 }} de {{ totalPages }}</span>
+    <button (click)="changePage(1)" [disabled]="currentPage >= totalPages - 1" class="btn-page">Próxima</button>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal-content">
+      <h3>Confirmar Exclusão</h3>
+      <p>Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
+      <div class="modal-actions">
+        <button (click)="cancelDelete()" class="btn-secondary">Cancelar</button>
+        <button (click)="confirmDelete()" class="btn-danger">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>

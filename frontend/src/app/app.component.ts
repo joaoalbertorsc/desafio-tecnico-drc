@@ -1,3 +1,4 @@
+
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
@@ -20,7 +21,7 @@ import { RouterOutlet } from '@angular/router';
       <router-outlet></router-outlet>
     </main>
     <footer>
-      <p>&copy; 2024 DRC Challenge - Gerenciamento de Estoque</p>
+      <p>&copy; 2026 DRC Challenge - Gerenciamento de Estoque</p>
     </footer>
   `,
   styles: [`
@@ -29,16 +30,16 @@ import { RouterOutlet } from '@angular/router';
       flex-direction: column;
       min-height: 100vh;
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f6f9; /* Light background for contrast with the card */
+      background-color: #f4f6f9;
     }
     .app-header {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
       color: white;
-      padding: 0.8rem 2rem; /* Slightly reduced padding */
+      padding: 0.8rem 2rem;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .header-content {
-      max-width: 1400px; /* Increased width */
+      max-width: 1400px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
@@ -46,7 +47,7 @@ import { RouterOutlet } from '@angular/router';
     }
     .logo h1 {
       margin: 0;
-      font-size: 1.4rem; /* Slightly smaller for professional look */
+      font-size: 1.4rem;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
@@ -57,7 +58,7 @@ import { RouterOutlet } from '@angular/router';
     main {
       flex: 1;
       padding: 20px;
-      max-width: 1400px; /* Increased width */
+      max-width: 1400px;
       margin: 0 auto;
       width: 100%;
       box-sizing: border-box;
